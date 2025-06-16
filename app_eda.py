@@ -216,6 +216,30 @@ class EDA:
 
         df = pd.read_csv(uploaded)
         
+        # 컬럼명 매핑
+        column_mapping = {
+            '연도': 'year',
+            '지역': 'region',
+            '인구': 'population',
+            '출생아수(명)': 'births',
+            '사망자수(명)': 'deaths'
+        }
+        
+        # 컬럼명 변경
+        df = df.rename(columns=column_mapping)
+        
+        # 컬럼명 확인 및 표시
+        st.write("데이터 컬럼:", df.columns.tolist())
+        
+        # 필요한 컬럼이 있는지 확인
+        required_columns = ['year', 'region', 'population']
+        missing_columns = [col for col in required_columns if col not in df.columns]
+        
+        if missing_columns:
+            st.error(f"필요한 컬럼이 없습니다: {', '.join(missing_columns)}")
+            st.info("CSV 파일은 다음 컬럼을 포함해야 합니다: 연도, 지역, 인구")
+            return
+            
         # Firebase에 데이터 저장
         try:
             data = df.to_dict('records')
@@ -274,7 +298,9 @@ class EDA:
             # 연도별 통계
             st.subheader("연도별 통계")
             yearly_stats = df.groupby('year').agg({
-                'population': ['mean', 'min', 'max', 'std']
+                'population': ['mean', 'min', 'max', 'std'],
+                'births': ['sum', 'mean'],
+                'deaths': ['sum', 'mean']
             }).round(2)
             st.dataframe(yearly_stats)
 
@@ -296,7 +322,9 @@ class EDA:
             # 지역별 최대/최소 인구
             st.subheader("지역별 최대/최소 인구")
             region_stats = df.groupby('region').agg({
-                'population': ['max', 'min']
+                'population': ['max', 'min'],
+                'births': ['mean'],
+                'deaths': ['mean']
             }).round(2)
             st.dataframe(region_stats)
 
@@ -309,6 +337,10 @@ class EDA:
             df = df.sort_values(['region', 'year'])
             df['population_change'] = df.groupby('region')['population'].diff()
             df['change_rate'] = (df['population_change'] / df['population'].shift(1) * 100).round(2)
+            
+            # 자연증가율 계산
+            df['natural_increase'] = df['births'] - df['deaths']
+            df['natural_increase_rate'] = (df['natural_increase'] / df['population'] * 1000).round(2)
 
             # 변화량 상위 지역
             st.subheader("인구 변화량 상위 지역")
@@ -319,6 +351,13 @@ class EDA:
             st.subheader("인구 증감률 상위 지역")
             top_rates = df.nlargest(10, 'change_rate')[['region', 'year', 'change_rate']]
             st.dataframe(top_rates)
+            
+            # 자연증가율 분석
+            st.subheader("자연증가율 분석")
+            natural_increase_stats = df.groupby('region').agg({
+                'natural_increase_rate': ['mean', 'min', 'max']
+            }).round(2)
+            st.dataframe(natural_increase_stats)
 
         # 5. 시각화
         with tabs[4]:
@@ -343,6 +382,18 @@ class EDA:
             fig, ax = plt.subplots(figsize=(12, 8))
             sns.heatmap(pivot_df, annot=True, fmt='.0f', cmap='YlOrRd')
             plt.title('연도-지역 인구 히트맵')
+            st.pyplot(fig)
+            
+            # 출생/사망 추이
+            st.subheader("연도별 출생/사망 추이")
+            yearly_vital = df.groupby('year')[['births', 'deaths']].sum().reset_index()
+            
+            fig, ax = plt.subplots(figsize=(10, 6))
+            yearly_vital.plot(x='year', y=['births', 'deaths'], marker='o', ax=ax)
+            plt.title('연도별 출생/사망 추이')
+            plt.xlabel('연도')
+            plt.ylabel('인원')
+            plt.grid(True)
             st.pyplot(fig)
 
 
