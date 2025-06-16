@@ -214,13 +214,13 @@ class EDA:
             st.info("population_trends.csv 파일을 업로드 해주세요.")
             return
 
-        # 데이터 타입 지정하여 읽기
+        # 데이터 타입 지정하여 읽기 (float64로 변경)
         df = pd.read_csv(uploaded, dtype={
             '연도': 'int64',
             '지역': 'str',
-            '인구': 'int64',
-            '출생아수(명)': 'int64',
-            '사망자수(명)': 'int64'
+            '인구': 'float64',
+            '출생아수(명)': 'float64',
+            '사망자수(명)': 'float64'
         })
         
         # 컬럼명 매핑
