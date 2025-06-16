@@ -214,7 +214,14 @@ class EDA:
             st.info("population_trends.csv 파일을 업로드 해주세요.")
             return
 
-        df = pd.read_csv(uploaded)
+        # 데이터 타입 지정하여 읽기
+        df = pd.read_csv(uploaded, dtype={
+            '연도': 'int64',
+            '지역': 'str',
+            '인구': 'int64',
+            '출생아수(명)': 'int64',
+            '사망자수(명)': 'int64'
+        })
         
         # 컬럼명 매핑
         column_mapping = {
@@ -333,8 +340,6 @@ class EDA:
             st.header("📊 변화량 분석")
             
             # 연도별 변화량 계산
-            df['year'] = pd.to_numeric(df['year'])
-            df = df.sort_values(['region', 'year'])
             df['population_change'] = df.groupby('region')['population'].diff()
             df['change_rate'] = (df['population_change'] / df['population'].shift(1) * 100).round(2)
             
