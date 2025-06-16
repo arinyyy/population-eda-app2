@@ -16,7 +16,7 @@ firebase_config = {
     "authDomain": "sw-projects-49798.firebaseapp.com",
     "databaseURL": "https://sw-projects-49798-default-rtdb.firebaseio.com",
     "projectId": "sw-projects-49798",
-    "storageBucket": "sw-projects-49798.firebasestorage.app",
+    "storageBucket": "sw-projects-49798.appspot.com",
     "messagingSenderId": "812186368395",
     "appId": "1:812186368395:web:be2f7291ce54396209d78e"
 }
